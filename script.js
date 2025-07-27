@@ -1672,9 +1672,23 @@ function viewSupplier(supplierId) {
                                 <span class="text-green-600">${supplier.distance}km away</span>
                             </div>
                         </div>
-                        <button onclick="callSupplier('${supplier.phone}')" class="bg-blue-500 text-white px-4 py-2 rounded-lg">
-                            📞 Call
-                        </button>
+                    </div>
+                    
+                    <!-- Contact Information -->
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Contact Information</h4>
+                        <div class="space-y-2">
+                            <div class="flex items-center text-sm text-gray-600">
+                                <span class="text-lg mr-2">📞</span>
+                                <span class="font-medium">Phone:</span>
+                                <span class="ml-2">${supplier.phone}</span>
+                            </div>
+                            <div class="flex items-center text-sm text-gray-600">
+                                <span class="text-lg mr-2">📍</span>
+                                <span class="font-medium">Address:</span>
+                                <span class="ml-2">${supplier.address}</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         ${supplier.categories.map(cat => `
