@@ -231,8 +231,8 @@ function LoginPage() {
                         <input type="tel" id="phone" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="+91 98765 43210" required>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">OTP</label>
-                        <input type="text" id="otp" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Enter 6-digit OTP" maxlength="6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input type="password" id="password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Enter your password" required>
                     </div>
                     <button type="submit" class="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors">
                         Sign In
@@ -341,7 +341,7 @@ function RegistrationPage(role) {
 
 function VendorDashboard() {
     return `
-        <div class="min-h-screen bg-gray-50">
+        <div class="min-h-screen bg-gray-50 pb-20">
             <!-- Header -->
             <header class="bg-white shadow-sm sticky top-0 z-10">
                 <div class="max-w-7xl mx-auto px-4 py-4">
@@ -555,13 +555,13 @@ function SuppliersPage() {
                     
                     <!-- Search and Filters -->
                     <div class="mt-4 space-y-4">
-                        <input type="text" placeholder="Search suppliers or products..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        <input type="text" id="supplier-search" placeholder="Search suppliers or products..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" oninput="searchSuppliers()">
                         <div class="flex space-x-2 overflow-x-auto">
-                            <button class="px-4 py-2 bg-green-500 text-white rounded-full text-sm whitespace-nowrap">All</button>
-                            <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm whitespace-nowrap">Vegetables</button>
-                            <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm whitespace-nowrap">Fruits</button>
-                            <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm whitespace-nowrap">Spices</button>
-                            <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm whitespace-nowrap">Dairy</button>
+                            <button onclick="filterSuppliers('all')" id="filter-all-suppliers" class="px-4 py-2 bg-green-500 text-white rounded-full text-sm whitespace-nowrap">All</button>
+                            <button onclick="filterSuppliers('Vegetables')" id="filter-vegetables" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm whitespace-nowrap">Vegetables</button>
+                            <button onclick="filterSuppliers('Fruits')" id="filter-fruits" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm whitespace-nowrap">Fruits</button>
+                            <button onclick="filterSuppliers('Spices')" id="filter-spices" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm whitespace-nowrap">Spices</button>
+                            <button onclick="filterSuppliers('Dairy')" id="filter-dairy" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm whitespace-nowrap">Dairy</button>
                         </div>
                     </div>
                 </div>
@@ -569,9 +569,9 @@ function SuppliersPage() {
 
             <div class="max-w-7xl mx-auto px-4 py-6">
                 <!-- Suppliers List -->
-                <div class="space-y-4">
+                <div class="space-y-4" id="suppliers-container">
                     ${sampleSuppliers.map(supplier => `
-                        <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer" onclick="viewSupplier('${supplier.id}')">
+                        <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer supplier-item" onclick="viewSupplier('${supplier.id}')" data-name="${supplier.name.toLowerCase()}" data-categories="${supplier.categories.join(',').toLowerCase()}" data-products="${supplier.products.map(p => p.name.toLowerCase()).join(',')}">
                             <div class="flex items-start justify-between mb-4">
                                 <div class="flex items-center">
                                     <div class="w-16 h-16 bg-gradient-to-r from-green-400 to-blue-500 rounded-xl flex items-center justify-center mr-4">
@@ -648,17 +648,28 @@ function BatchOrdersPage() {
             </header>
 
             <div class="max-w-7xl mx-auto px-4 py-6">
+                <!-- Search for Batch Orders -->
+                <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+                    <input type="text" id="batch-search" placeholder="Search batch orders by product or supplier..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" oninput="searchBatchOrders()">
+                </div>
+
                 <!-- Active Batch Orders -->
                 <div class="mb-8">
                     <h2 class="text-lg font-semibold mb-4">🔥 Active Orders</h2>
-                    <div class="space-y-4">
+                    <div class="space-y-4" id="batch-orders-container">
                         ${sampleBatchOrders.map(order => `
-                            <div class="bg-white rounded-xl shadow-sm p-6">
+                            <div class="bg-white rounded-xl shadow-sm p-6 batch-order-item" data-product="${order.productName.toLowerCase()}" data-supplier="${order.supplierName.toLowerCase()}">
                                 <div class="flex items-center justify-between mb-4">
                                     <div class="flex items-center">
                                         <span class="text-3xl mr-4">${order.productImage}</span>
                                         <div>
-                                            <h3 class="text-lg font-semibold">${order.productName}</h3>
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <h3 class="text-lg font-semibold">${order.productName}</h3>
+                                                ${order.createdBy === (AppState.currentUser?.phone || 'current-user') 
+                                                    ? '<span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">You Started This</span>'
+                                                    : ''
+                                                }
+                                            </div>
                                             <p class="text-gray-600">${order.supplierName}</p>
                                             ${order.status === 'completed' 
                                                 ? '<p class="text-sm text-green-600">✅ Order Completed</p>'
@@ -716,6 +727,7 @@ function BatchOrdersPage() {
                                                 <span class="text-xs px-2 py-1 rounded-full ${userOrder.type === 'individual' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}">
                                                     ${userOrder.type === 'individual' ? 'Individual' : 'Batch'}
                                                 </span>
+                                                ${userOrder.role === 'starter' ? '<span class="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800">Starter</span>' : ''}
                                             </div>
                                             <p class="text-gray-600">${userOrder.supplierName}</p>
                                             <p class="text-sm text-green-600">✅ ${userOrder.status === 'confirmed' ? 'Confirmed' : userOrder.status} - ${userOrder.quantity}${userOrder.type === 'individual' ? userOrder.quantity === 1 ? ' unit' : ' units' : 'kg'} ordered</p>
@@ -853,7 +865,7 @@ function ProfilePage() {
                     </div>
 
                     <div class="bg-white rounded-xl shadow-sm">
-                        <button class="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50">
+                        <button onclick="switchView('payment-methods')" class="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50">
                             <div class="flex items-center">
                                 <span class="text-xl mr-3">💳</span>
                                 <span class="font-medium">Payment Methods</span>
@@ -863,7 +875,7 @@ function ProfilePage() {
                     </div>
 
                     <div class="bg-white rounded-xl shadow-sm">
-                        <button class="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50">
+                        <button onclick="switchView('delivery-addresses')" class="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50">
                             <div class="flex items-center">
                                 <span class="text-xl mr-3">📍</span>
                                 <span class="font-medium">Delivery Addresses</span>
@@ -873,7 +885,7 @@ function ProfilePage() {
                     </div>
 
                     <div class="bg-white rounded-xl shadow-sm">
-                        <button class="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50">
+                        <button onclick="switchView('notifications')" class="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50">
                             <div class="flex items-center">
                                 <span class="text-xl mr-3">🔔</span>
                                 <span class="font-medium">Notifications</span>
@@ -883,7 +895,7 @@ function ProfilePage() {
                     </div>
 
                     <div class="bg-white rounded-xl shadow-sm">
-                        <button class="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50">
+                        <button onclick="switchView('help-support')" class="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50">
                             <div class="flex items-center">
                                 <span class="text-xl mr-3">❓</span>
                                 <span class="font-medium">Help & Support</span>
@@ -955,9 +967,9 @@ function OrderHistoryPage() {
                 <!-- Order Filters -->
                 <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
                     <div class="flex gap-4">
-                        <button onclick="filterOrders('all')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm" id="filter-all">All Orders</button>
-                        <button onclick="filterOrders('individual')" class="px-4 py-2 text-gray-700 rounded-lg text-sm hover:bg-gray-100" id="filter-individual">Individual</button>
-                        <button onclick="filterOrders('batch')" class="px-4 py-2 text-gray-700 rounded-lg text-sm hover:bg-gray-100" id="filter-batch">Batch Orders</button>
+                        <button onclick="filterOrders('all')" class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm transition-colors" id="filter-all">All Orders</button>
+                        <button onclick="filterOrders('individual')" class="px-4 py-2 text-gray-700 rounded-lg text-sm hover:bg-gray-100 transition-colors" id="filter-individual">Individual</button>
+                        <button onclick="filterOrders('batch')" class="px-4 py-2 text-gray-700 rounded-lg text-sm hover:bg-gray-100 transition-colors" id="filter-batch">Batch Orders</button>
                     </div>
                 </div>
 
@@ -1029,6 +1041,404 @@ function OrderHistoryPage() {
     `;
 }
 
+function PaymentMethodsPage() {
+    // Mock payment methods data
+    const paymentMethods = [
+        { id: 'pm1', type: 'card', last4: '1234', cardType: 'Visa', isDefault: true },
+        { id: 'pm2', type: 'upi', upiId: 'vendor@paytm', isDefault: false },
+        { id: 'pm3', type: 'wallet', name: 'Paytm Wallet', balance: 2450, isDefault: false }
+    ];
+
+    return `
+        <div class="min-h-screen bg-gray-50 pb-20">
+            <!-- Header -->
+            <header class="bg-white shadow-sm sticky top-0 z-10">
+                <div class="max-w-7xl mx-auto px-4 py-4">
+                    <div class="flex items-center">
+                        <button onclick="switchView('profile')" class="mr-4 p-2 hover:bg-gray-100 rounded-lg">
+                            <span class="text-xl">←</span>
+                        </button>
+                        <div>
+                            <h1 class="text-xl font-semibold">Payment Methods</h1>
+                            <p class="text-sm text-gray-600">Manage your payment options</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="max-w-7xl mx-auto px-4 py-6">
+                <!-- Add New Payment Method -->
+                <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                    <button onclick="showAddPaymentModal()" class="w-full flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors">
+                        <span class="text-2xl mr-3">➕</span>
+                        <span class="font-medium text-gray-700">Add New Payment Method</span>
+                    </button>
+                </div>
+
+                <!-- Payment Methods List -->
+                <div class="space-y-4">
+                    ${paymentMethods.map(method => `
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    ${method.type === 'card' 
+                                        ? `<div class="w-12 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-md flex items-center justify-center mr-4">
+                                             <span class="text-white text-xs font-bold">${method.cardType}</span>
+                                           </div>`
+                                        : method.type === 'upi'
+                                        ? `<div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
+                                             <span class="text-2xl">📱</span>
+                                           </div>`
+                                        : `<div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                                             <span class="text-2xl">💰</span>
+                                           </div>`
+                                    }
+                                    <div>
+                                        <h3 class="font-semibold">
+                                            ${method.type === 'card' 
+                                                ? `${method.cardType} ending in ${method.last4}`
+                                                : method.type === 'upi'
+                                                ? `UPI ID: ${method.upiId}`
+                                                : `${method.name} (₹${method.balance})`
+                                            }
+                                        </h3>
+                                        ${method.isDefault 
+                                            ? '<p class="text-sm text-green-600">✅ Default payment method</p>'
+                                            : '<p class="text-sm text-gray-500">Available for payments</p>'
+                                        }
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    ${!method.isDefault 
+                                        ? `<button onclick="setDefaultPayment('${method.id}')" class="text-blue-600 hover:text-blue-700 text-sm">Set Default</button>`
+                                        : ''
+                                    }
+                                    <button onclick="removePaymentMethod('${method.id}')" class="text-red-600 hover:text-red-700 text-sm">Remove</button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            ${getBottomNavigation()}
+        </div>
+    `;
+}
+
+function DeliveryAddressesPage() {
+    // Mock addresses data
+    const addresses = [
+        { 
+            id: 'addr1', 
+            name: 'Business Address', 
+            address: 'Shop 15, Food Court, Dadar Market, Mumbai - 400014', 
+            isDefault: true,
+            type: 'business' 
+        },
+        { 
+            id: 'addr2', 
+            name: 'Home Address', 
+            address: '204, Sunrise Apartments, Bandra West, Mumbai - 400050', 
+            isDefault: false,
+            type: 'home' 
+        }
+    ];
+
+    return `
+        <div class="min-h-screen bg-gray-50 pb-20">
+            <!-- Header -->
+            <header class="bg-white shadow-sm sticky top-0 z-10">
+                <div class="max-w-7xl mx-auto px-4 py-4">
+                    <div class="flex items-center">
+                        <button onclick="switchView('profile')" class="mr-4 p-2 hover:bg-gray-100 rounded-lg">
+                            <span class="text-xl">←</span>
+                        </button>
+                        <div>
+                            <h1 class="text-xl font-semibold">Delivery Addresses</h1>
+                            <p class="text-sm text-gray-600">Manage your delivery locations</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="max-w-7xl mx-auto px-4 py-6">
+                <!-- Add New Address -->
+                <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                    <button onclick="showAddAddressModal()" class="w-full flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors">
+                        <span class="text-2xl mr-3">📍</span>
+                        <span class="font-medium text-gray-700">Add New Address</span>
+                    </button>
+                </div>
+
+                <!-- Addresses List -->
+                <div class="space-y-4">
+                    ${addresses.map(addr => `
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-start">
+                                    <div class="w-12 h-12 ${addr.type === 'business' ? 'bg-blue-100' : 'bg-green-100'} rounded-full flex items-center justify-center mr-4">
+                                        <span class="text-2xl">${addr.type === 'business' ? '🏪' : '🏠'}</span>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <h3 class="font-semibold">${addr.name}</h3>
+                                            ${addr.isDefault 
+                                                ? '<span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">Default</span>'
+                                                : ''
+                                            }
+                                        </div>
+                                        <p class="text-gray-600 text-sm max-w-md">${addr.address}</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button onclick="editAddress('${addr.id}')" class="text-blue-600 hover:text-blue-700 text-sm">Edit</button>
+                                    ${!addr.isDefault 
+                                        ? `<button onclick="setDefaultAddress('${addr.id}')" class="text-green-600 hover:text-green-700 text-sm">Set Default</button>`
+                                        : ''
+                                    }
+                                    ${!addr.isDefault 
+                                        ? `<button onclick="removeAddress('${addr.id}')" class="text-red-600 hover:text-red-700 text-sm">Remove</button>`
+                                        : ''
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            ${getBottomNavigation()}
+        </div>
+    `;
+}
+
+function NotificationsPage() {
+    return `
+        <div class="min-h-screen bg-gray-50 pb-20">
+            <!-- Header -->
+            <header class="bg-white shadow-sm sticky top-0 z-10">
+                <div class="max-w-7xl mx-auto px-4 py-4">
+                    <div class="flex items-center">
+                        <button onclick="switchView('profile')" class="mr-4 p-2 hover:bg-gray-100 rounded-lg">
+                            <span class="text-xl">←</span>
+                        </button>
+                        <div>
+                            <h1 class="text-xl font-semibold">Notification Settings</h1>
+                            <p class="text-sm text-gray-600">Control your notification preferences</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="max-w-7xl mx-auto px-4 py-6">
+                <!-- Notification Categories -->
+                <div class="space-y-6">
+                    <!-- Order Notifications -->
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h3 class="text-lg font-semibold mb-4">📦 Order Notifications</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-medium">Order Confirmations</p>
+                                    <p class="text-sm text-gray-600">Get notified when your orders are confirmed</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" checked class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-medium">Delivery Updates</p>
+                                    <p class="text-sm text-gray-600">Track your order delivery status</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" checked class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Batch Order Notifications -->
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h3 class="text-lg font-semibold mb-4">👥 Batch Order Notifications</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-medium">New Batch Orders</p>
+                                    <p class="text-sm text-gray-600">Alert when new batch orders are available</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" checked class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-medium">Batch Order Completions</p>
+                                    <p class="text-sm text-gray-600">Know when batch orders are full</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Promotional Notifications -->
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h3 class="text-lg font-semibold mb-4">🎯 Promotional Notifications</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-medium">Special Offers</p>
+                                    <p class="text-sm text-gray-600">Receive notifications about deals and discounts</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-medium">New Suppliers</p>
+                                    <p class="text-sm text-gray-600">Get alerted about new suppliers in your area</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" checked class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            ${getBottomNavigation()}
+        </div>
+    `;
+}
+
+function HelpSupportPage() {
+    return `
+        <div class="min-h-screen bg-gray-50 pb-20">
+            <!-- Header -->
+            <header class="bg-white shadow-sm sticky top-0 z-10">
+                <div class="max-w-7xl mx-auto px-4 py-4">
+                    <div class="flex items-center">
+                        <button onclick="switchView('profile')" class="mr-4 p-2 hover:bg-gray-100 rounded-lg">
+                            <span class="text-xl">←</span>
+                        </button>
+                        <div>
+                            <h1 class="text-xl font-semibold">Help & Support</h1>
+                            <p class="text-sm text-gray-600">Get help and contact support</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="max-w-7xl mx-auto px-4 py-6">
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4">Quick Help</h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <button onclick="showContactModal()" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                            <span class="text-2xl mr-3">📞</span>
+                            <div class="text-left">
+                                <p class="font-medium">Contact Support</p>
+                                <p class="text-sm text-gray-600">Get immediate help</p>
+                            </div>
+                        </button>
+                        <button onclick="showFeedbackModal()" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                            <span class="text-2xl mr-3">💬</span>
+                            <div class="text-left">
+                                <p class="font-medium">Send Feedback</p>
+                                <p class="text-sm text-gray-600">Share your thoughts</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- FAQ Section -->
+                <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4">Frequently Asked Questions</h3>
+                    <div class="space-y-4">
+                        <div class="border-b border-gray-200 pb-4">
+                            <button onclick="toggleFAQ('faq1')" class="w-full text-left flex justify-between items-center">
+                                <h4 class="font-medium">How do batch orders work?</h4>
+                                <span id="faq1-icon" class="text-gray-400">+</span>
+                            </button>
+                            <div id="faq1" class="hidden mt-2 text-sm text-gray-600">
+                                Batch orders allow multiple vendors to combine orders for better wholesale prices. When you join a batch order, you get bulk pricing even for smaller quantities.
+                            </div>
+                        </div>
+                        <div class="border-b border-gray-200 pb-4">
+                            <button onclick="toggleFAQ('faq2')" class="w-full text-left flex justify-between items-center">
+                                <h4 class="font-medium">How do I track my orders?</h4>
+                                <span id="faq2-icon" class="text-gray-400">+</span>
+                            </button>
+                            <div id="faq2" class="hidden mt-2 text-sm text-gray-600">
+                                You can track all your orders in the "Batch Orders" tab or view detailed history in your profile under "Order History".
+                            </div>
+                        </div>
+                        <div class="border-b border-gray-200 pb-4">
+                            <button onclick="toggleFAQ('faq3')" class="w-full text-left flex justify-between items-center">
+                                <h4 class="font-medium">What payment methods are accepted?</h4>
+                                <span id="faq3-icon" class="text-gray-400">+</span>
+                            </button>
+                            <div id="faq3" class="hidden mt-2 text-sm text-gray-600">
+                                We accept all major credit/debit cards, UPI payments, and digital wallets. You can manage your payment methods in the Profile section.
+                            </div>
+                        </div>
+                        <div class="border-b border-gray-200 pb-4">
+                            <button onclick="toggleFAQ('faq4')" class="w-full text-left flex justify-between items-center">
+                                <h4 class="font-medium">How do I become a verified supplier?</h4>
+                                <span id="faq4-icon" class="text-gray-400">+</span>
+                            </button>
+                            <div id="faq4" class="hidden mt-2 text-sm text-gray-600">
+                                Register as a supplier and complete the verification process by providing business documents, GST certificate, and location verification.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h3 class="text-lg font-semibold mb-4">Contact Information</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center">
+                            <span class="text-xl mr-3">📧</span>
+                            <div>
+                                <p class="font-medium">Email Support</p>
+                                <p class="text-sm text-gray-600">support@freshlink.com</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-xl mr-3">📞</span>
+                            <div>
+                                <p class="font-medium">Phone Support</p>
+                                <p class="text-sm text-gray-600">+91 98765 00000 (9 AM - 9 PM)</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-xl mr-3">💬</span>
+                            <div>
+                                <p class="font-medium">Live Chat</p>
+                                <p class="text-sm text-gray-600">Available 24/7 in the app</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            ${getBottomNavigation()}
+        </div>
+    `;
+}
+
 // Helper function for bottom navigation
 function getBottomNavigation() {
     return `
@@ -1073,14 +1483,19 @@ function startRegistration(role) {
 function handleLogin(event) {
     event.preventDefault();
     const phone = document.getElementById('phone').value;
-    const otp = document.getElementById('otp').value;
+    const password = document.getElementById('password').value;
     
     if (!phone) {
         showNotification('Please enter phone number', 'error');
         return;
     }
     
-    // Simulate login
+    if (!password) {
+        showNotification('Please enter password', 'error');
+        return;
+    }
+    
+    // Simulate login (in a real app, you would validate credentials with a backend)
     AppState.currentUser = { phone, role: 'vendor' };
     AppState.currentView = 'vendor-dashboard';
     showNotification('Login successful!');
@@ -1108,6 +1523,22 @@ function joinBatchOrder(orderId) {
     
     if (!batchOrder) {
         showNotification('Batch order not found!', 'error');
+        return;
+    }
+    
+    // Check if user is trying to join their own batch order
+    if (batchOrder.createdBy === (AppState.currentUser?.phone || 'current-user')) {
+        showNotification('You cannot join your own batch order!', 'error');
+        return;
+    }
+    
+    // Check if user has already joined this batch order
+    const alreadyJoined = AppState.userOrders.some(order => 
+        order.batchOrderId === orderId && order.type === 'batch'
+    );
+    
+    if (alreadyJoined) {
+        showNotification('You have already joined this batch order!', 'error');
         return;
     }
     
@@ -1408,7 +1839,168 @@ function confirmIndividualOrder(productId, supplierId) {
 }
 
 function startBatchOrder(productId) {
-    showNotification('Batch order started! Other vendors can now join.');
+    // Find the product and supplier
+    let product = null;
+    let supplier = null;
+    
+    for (const sup of sampleSuppliers) {
+        const foundProduct = sup.products.find(p => p.id === productId);
+        if (foundProduct) {
+            product = foundProduct;
+            supplier = sup;
+            break;
+        }
+    }
+    
+    if (!product || !supplier) {
+        showNotification('Product not found!', 'error');
+        return;
+    }
+
+    // Create batch order modal
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.innerHTML = `
+        <div class="bg-white rounded-xl p-6 m-4 max-w-md w-full">
+            <h3 class="text-lg font-semibold mb-4">Start Batch Order</h3>
+            <div class="mb-4">
+                <div class="flex items-center mb-3">
+                    <span class="text-3xl mr-3">${product.image}</span>
+                    <div>
+                        <h4 class="font-semibold">${product.name}</h4>
+                        <p class="text-sm text-gray-600">${supplier.name}</p>
+                    </div>
+                </div>
+                <div class="bg-green-50 p-3 rounded-lg mb-3">
+                    <p class="text-sm text-gray-600">Batch Price (Bulk Discount)</p>
+                    <p class="text-xl font-bold text-green-600">₹${product.price}/kg</p>
+                    <p class="text-xs text-gray-500">Save money when others join!</p>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Target Quantity (kg)</label>
+                <input type="number" id="batch-target-quantity" class="w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="50" min="10" max="${product.available}" value="50">
+                <p class="text-xs text-gray-500 mt-1">Minimum: 10kg, Available: ${product.available}kg</p>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Your Initial Order (kg)</label>
+                <input type="number" id="batch-initial-quantity" class="w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="10" min="1" value="10">
+                <p class="text-xs text-gray-500 mt-1">You'll start this batch order</p>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Order Expires In</label>
+                <select id="batch-expiry" class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+                    <option value="2h">2 hours</option>
+                    <option value="4h">4 hours</option>
+                    <option value="6h">6 hours</option>
+                    <option value="12h">12 hours</option>
+                    <option value="24h">24 hours</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Delivery Time</label>
+                <select id="batch-delivery" class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+                    <option value="Tomorrow 8:00 AM">Tomorrow 8:00 AM</option>
+                    <option value="Tomorrow 6:00 PM">Tomorrow 6:00 PM</option>
+                    <option value="Day after tomorrow 8:00 AM">Day after tomorrow 8:00 AM</option>
+                </select>
+            </div>
+            <div class="flex space-x-4">
+                <button onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg">Cancel</button>
+                <button onclick="confirmStartBatchOrder('${productId}', '${supplier.id}'); this.closest('.fixed').remove()" class="flex-1 bg-green-500 text-white py-2 rounded-lg">Start Batch Order</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function confirmStartBatchOrder(productId, supplierId) {
+    const targetQuantity = parseInt(document.getElementById('batch-target-quantity')?.value || 50);
+    const initialQuantity = parseInt(document.getElementById('batch-initial-quantity')?.value || 10);
+    const expiry = document.getElementById('batch-expiry')?.value || '2h';
+    const deliveryTime = document.getElementById('batch-delivery')?.value || 'Tomorrow 8:00 AM';
+    
+    // Find the product and supplier
+    let product = null;
+    let supplier = null;
+    
+    for (const sup of sampleSuppliers) {
+        const foundProduct = sup.products.find(p => p.id === productId);
+        if (foundProduct) {
+            product = foundProduct;
+            supplier = sup;
+            break;
+        }
+    }
+    
+    if (!product || !supplier) {
+        showNotification('Product or supplier not found!', 'error');
+        return;
+    }
+    
+    // Validate quantities
+    if (initialQuantity > targetQuantity) {
+        showNotification('Initial quantity cannot exceed target quantity!', 'error');
+        return;
+    }
+    
+    if (targetQuantity > product.available) {
+        showNotification(`Only ${product.available}kg available!`, 'error');
+        return;
+    }
+    
+    if (targetQuantity < 10) {
+        showNotification('Minimum batch size is 10kg!', 'error');
+        return;
+    }
+    
+    // Create new batch order
+    const newBatchOrder = {
+        id: `batch_${Date.now()}`,
+        productName: product.name,
+        productImage: product.image,
+        supplierName: supplier.name,
+        totalQuantity: targetQuantity,
+        currentQuantity: initialQuantity,
+        pricePerKg: product.price,
+        participants: 1,
+        expiresIn: expiry,
+        deliveryTime: deliveryTime,
+        status: 'open',
+        createdBy: AppState.currentUser?.phone || 'current-user'
+    };
+    
+    // Add to sample batch orders
+    sampleBatchOrders.push(newBatchOrder);
+    
+    // Add to user's personal orders as the starter
+    const userOrder = {
+        id: `user_order_${Date.now()}`,
+        type: 'batch',
+        batchOrderId: newBatchOrder.id,
+        productName: product.name,
+        productImage: product.image,
+        supplierName: supplier.name,
+        quantity: initialQuantity,
+        pricePerKg: product.price,
+        totalAmount: initialQuantity * product.price,
+        deliveryTime: deliveryTime,
+        status: 'confirmed',
+        joinedAt: new Date().toISOString(),
+        role: 'starter' // This user started the batch order
+    };
+    
+    AppState.userOrders.push(userOrder);
+    
+    // Update product availability
+    const supplierIndex = sampleSuppliers.findIndex(s => s.id === supplierId);
+    const productIndex = sampleSuppliers[supplierIndex].products.findIndex(p => p.id === productId);
+    sampleSuppliers[supplierIndex].products[productIndex].available -= targetQuantity; // Reserve the target quantity
+    
+    showNotification(`Batch order started successfully! You've reserved ${initialQuantity}kg out of ${targetQuantity}kg target.`);
+    
+    // Re-render to show the new batch order
+    render();
 }
 
 function rateOrder(orderId) {
@@ -1452,14 +2044,98 @@ function submitRating() {
 function filterOrders(type) {
     // Update filter button styles
     document.querySelectorAll('[id^="filter-"]').forEach(btn => {
-        btn.className = 'px-4 py-2 text-gray-700 rounded-lg text-sm hover:bg-gray-100';
+        if (btn.id.includes('all') || btn.id.includes('individual') || btn.id.includes('batch')) {
+            btn.className = 'px-4 py-2 text-gray-700 rounded-lg text-sm hover:bg-gray-100 transition-colors';
+        }
     });
-    document.getElementById(`filter-${type}`).className = 'px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm';
+    document.getElementById(`filter-${type}`).className = 'px-4 py-2 bg-blue-500 text-white rounded-lg text-sm transition-colors';
     
     // Show/hide orders based on filter
-    document.querySelectorAll('.order-item').forEach(item => {
+    const orderItems = document.querySelectorAll('.order-item');
+    let visibleCount = 0;
+    
+    orderItems.forEach(item => {
         const orderType = item.getAttribute('data-type');
         if (type === 'all' || orderType === type) {
+            item.style.display = 'block';
+            visibleCount++;
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    
+    // Show no results message if needed
+    const container = document.getElementById('orders-container');
+    const existingNoResults = container.querySelector('.no-results-message');
+    
+    if (visibleCount === 0 && !existingNoResults) {
+        const noResultsMessage = document.createElement('div');
+        noResultsMessage.className = 'bg-white rounded-xl shadow-sm p-8 text-center no-results-message';
+        noResultsMessage.innerHTML = `
+            <div class="text-4xl mb-4">🔍</div>
+            <h3 class="text-lg font-semibold mb-2">No ${type === 'all' ? '' : type} orders found</h3>
+            <p class="text-gray-600">Try selecting a different filter or place some orders.</p>
+        `;
+        container.appendChild(noResultsMessage);
+    } else if (visibleCount > 0 && existingNoResults) {
+        existingNoResults.remove();
+    }
+}
+
+function searchSuppliers() {
+    const searchTerm = document.getElementById('supplier-search').value.toLowerCase();
+    const supplierItems = document.querySelectorAll('.supplier-item');
+    
+    supplierItems.forEach(item => {
+        const name = item.getAttribute('data-name');
+        const categories = item.getAttribute('data-categories');
+        const products = item.getAttribute('data-products');
+        
+        if (name.includes(searchTerm) || categories.includes(searchTerm) || products.includes(searchTerm)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+function filterSuppliers(category) {
+    // Update filter button styles
+    document.querySelectorAll('[id^="filter-"]').forEach(btn => {
+        if (btn.id.includes('suppliers') || btn.id.includes('vegetables') || btn.id.includes('fruits') || btn.id.includes('spices') || btn.id.includes('dairy')) {
+            btn.className = 'px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm whitespace-nowrap';
+        }
+    });
+    
+    if (category === 'all') {
+        document.getElementById('filter-all-suppliers').className = 'px-4 py-2 bg-green-500 text-white rounded-full text-sm whitespace-nowrap';
+    } else {
+        document.getElementById(`filter-${category.toLowerCase()}`).className = 'px-4 py-2 bg-green-500 text-white rounded-full text-sm whitespace-nowrap';
+    }
+    
+    // Filter suppliers based on category
+    const supplierItems = document.querySelectorAll('.supplier-item');
+    
+    supplierItems.forEach(item => {
+        const categories = item.getAttribute('data-categories');
+        
+        if (category === 'all' || categories.includes(category.toLowerCase())) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+function searchBatchOrders() {
+    const searchTerm = document.getElementById('batch-search').value.toLowerCase();
+    const batchItems = document.querySelectorAll('.batch-order-item');
+    
+    batchItems.forEach(item => {
+        const product = item.getAttribute('data-product');
+        const supplier = item.getAttribute('data-supplier');
+        
+        if (product.includes(searchTerm) || supplier.includes(searchTerm)) {
             item.style.display = 'block';
         } else {
             item.style.display = 'none';
@@ -1503,6 +2179,18 @@ function render() {
         case 'order-history':
             app.innerHTML = OrderHistoryPage();
             break;
+        case 'payment-methods':
+            app.innerHTML = PaymentMethodsPage();
+            break;
+        case 'delivery-addresses':
+            app.innerHTML = DeliveryAddressesPage();
+            break;
+        case 'notifications':
+            app.innerHTML = NotificationsPage();
+            break;
+        case 'help-support':
+            app.innerHTML = HelpSupportPage();
+            break;
         default:
             app.innerHTML = LandingPage();
     }
@@ -1512,3 +2200,60 @@ function render() {
 document.addEventListener('DOMContentLoaded', function() {
     render();
 });
+
+// Profile page helper functions
+function showAddPaymentModal() {
+    alert('Add Payment Method feature - Coming Soon!\nThis will open a form to add new payment methods.');
+}
+
+function setDefaultPayment(paymentId) {
+    alert(`Setting payment method ${paymentId} as default - Feature coming soon!`);
+}
+
+function removePaymentMethod(paymentId) {
+    if (confirm('Are you sure you want to remove this payment method?')) {
+        alert(`Payment method ${paymentId} removed - Feature coming soon!`);
+    }
+}
+
+function showAddAddressModal() {
+    alert('Add Address feature - Coming Soon!\nThis will open a form to add new delivery addresses.');
+}
+
+function editAddress(addressId) {
+    alert(`Edit address ${addressId} - Feature coming soon!`);
+}
+
+function setDefaultAddress(addressId) {
+    alert(`Setting address ${addressId} as default - Feature coming soon!`);
+}
+
+function removeAddress(addressId) {
+    if (confirm('Are you sure you want to remove this address?')) {
+        alert(`Address ${addressId} removed - Feature coming soon!`);
+    }
+}
+
+function toggleFAQ(faqId) {
+    const faqElement = document.getElementById(faqId);
+    const iconElement = document.getElementById(faqId + '-icon');
+    
+    if (faqElement.classList.contains('hidden')) {
+        faqElement.classList.remove('hidden');
+        iconElement.textContent = '-';
+    } else {
+        faqElement.classList.add('hidden');
+        iconElement.textContent = '+';
+    }
+}
+
+function showContactModal() {
+    alert('Contact Support - Feature coming soon!\nYou can reach us at:\nPhone: +91 98765 00000\nEmail: support@freshlink.com');
+}
+
+function showFeedbackModal() {
+    const feedback = prompt('Please share your feedback:');
+    if (feedback) {
+        alert('Thank you for your feedback! We will review it shortly.');
+    }
+}
