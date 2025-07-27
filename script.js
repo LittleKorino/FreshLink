@@ -7,7 +7,8 @@ const AppState = {
     products: [],
     batchOrders: [],
     userLocation: { lat: 19.0760, lng: 72.8777 }, // Default to Mumbai
-    notifications: []
+    notifications: [],
+    userOrders: [] // Track user's individual orders
 };
 
 // Sample Data
@@ -421,9 +422,10 @@ function VendorDashboard() {
                                             <p class="text-sm text-gray-600">${order.supplierName}</p>
                                         </div>
                                     </div>
-                                    <span class="text-sm bg-orange-100 text-orange-800 px-2 py-1 rounded">
-                                        ${order.expiresIn} left
-                                    </span>
+                                    ${order.status === 'completed' 
+                                        ? '<span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">✅ Completed</span>'
+                                        : `<span class="text-sm bg-orange-100 text-orange-800 px-2 py-1 rounded">${order.expiresIn} left</span>`
+                                    }
                                 </div>
                                 <div class="mb-3">
                                     <div class="flex justify-between text-sm text-gray-600 mb-1">
@@ -431,7 +433,7 @@ function VendorDashboard() {
                                         <span>${order.currentQuantity}/${order.totalQuantity} kg</span>
                                     </div>
                                     <div class="w-full bg-gray-200 rounded-full h-2">
-                                        <div class="bg-green-500 h-2 rounded-full" style="width: ${(order.currentQuantity/order.totalQuantity)*100}%"></div>
+                                        <div class="${order.status === 'completed' ? 'bg-green-500' : 'bg-green-500'} h-2 rounded-full" style="width: ${(order.currentQuantity/order.totalQuantity)*100}%"></div>
                                     </div>
                                 </div>
                                 <div class="flex justify-between items-center">
@@ -439,9 +441,10 @@ function VendorDashboard() {
                                         <p class="text-lg font-semibold text-green-600">₹${order.pricePerKg}/kg</p>
                                         <p class="text-xs text-gray-500">${order.participants} vendors joined</p>
                                     </div>
-                                    <button onclick="joinBatchOrder('${order.id}')" class="bg-green-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-600 transition-colors">
-                                        Join Order
-                                    </button>
+                                    ${order.status === 'completed' || order.currentQuantity >= order.totalQuantity
+                                        ? '<span class="text-sm text-gray-500 px-4 py-2 bg-gray-100 rounded-lg">Order Full</span>'
+                                        : `<button onclick="joinBatchOrder('${order.id}')" class="bg-green-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-600 transition-colors">Join Order</button>`
+                                    }
                                 </div>
                             </div>
                         `).join('')}
@@ -668,12 +671,19 @@ function BatchOrdersPage() {
                                         <div>
                                             <h3 class="text-lg font-semibold">${order.productName}</h3>
                                             <p class="text-gray-600">${order.supplierName}</p>
-                                            <p class="text-sm text-orange-600">⏰ ${order.expiresIn} remaining</p>
+                                            ${order.status === 'completed' 
+                                                ? '<p class="text-sm text-green-600">✅ Order Completed</p>'
+                                                : `<p class="text-sm text-orange-600">⏰ ${order.expiresIn} remaining</p>`
+                                            }
                                         </div>
                                     </div>
                                     <div class="text-right">
                                         <p class="text-2xl font-bold text-green-600">₹${order.pricePerKg}</p>
                                         <p class="text-sm text-gray-600">per kg</p>
+                                        ${order.status === 'completed' 
+                                            ? '<p class="text-xs text-green-600 font-medium">FULL</p>'
+                                            : ''
+                                        }
                                     </div>
                                 </div>
 
@@ -683,7 +693,7 @@ function BatchOrdersPage() {
                                         <span>${order.currentQuantity}/${order.totalQuantity} kg (${Math.round((order.currentQuantity/order.totalQuantity)*100)}%)</span>
                                     </div>
                                     <div class="w-full bg-gray-200 rounded-full h-3">
-                                        <div class="bg-green-500 h-3 rounded-full transition-all duration-300" style="width: ${(order.currentQuantity/order.totalQuantity)*100}%"></div>
+                                        <div class="${order.status === 'completed' ? 'bg-green-500' : 'bg-green-500'} h-3 rounded-full transition-all duration-300" style="width: ${(order.currentQuantity/order.totalQuantity)*100}%"></div>
                                     </div>
                                 </div>
 
@@ -692,9 +702,10 @@ function BatchOrdersPage() {
                                         <span class="mr-4">👥 ${order.participants} vendors joined</span>
                                         <span>🚚 ${order.deliveryTime}</span>
                                     </div>
-                                    <button onclick="joinBatchOrder('${order.id}')" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors">
-                                        Join Order
-                                    </button>
+                                    ${order.status === 'completed' || order.currentQuantity >= order.totalQuantity
+                                        ? '<span class="text-sm text-gray-500 px-6 py-2 bg-gray-100 rounded-lg">Order Full</span>'
+                                        : `<button onclick="joinBatchOrder('${order.id}')" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors">Join Order</button>`
+                                    }
                                 </div>
                             </div>
                         `).join('')}
@@ -705,6 +716,36 @@ function BatchOrdersPage() {
                 <div>
                     <h2 class="text-lg font-semibold mb-4">📋 Your Orders</h2>
                     <div class="space-y-4">
+                        ${AppState.userOrders.length > 0 ? AppState.userOrders.map(userOrder => `
+                            <div class="bg-white rounded-xl shadow-sm p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center">
+                                        <span class="text-3xl mr-4">${userOrder.productImage}</span>
+                                        <div>
+                                            <h3 class="text-lg font-semibold">${userOrder.productName}</h3>
+                                            <p class="text-gray-600">${userOrder.supplierName}</p>
+                                            <p class="text-sm text-green-600">✅ ${userOrder.status === 'confirmed' ? 'Confirmed' : userOrder.status} - ${userOrder.quantity}kg ordered</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-lg font-bold text-gray-800">₹${userOrder.totalAmount}</p>
+                                        <p class="text-sm text-gray-600">Total paid</p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-gray-600">Delivery: ${userOrder.deliveryTime}</span>
+                                    <button class="text-blue-600 hover:text-blue-700">Track Order</button>
+                                </div>
+                            </div>
+                        `).join('') : `
+                            <div class="bg-white rounded-xl shadow-sm p-6 text-center">
+                                <div class="text-4xl mb-4">📦</div>
+                                <h3 class="text-lg font-semibold mb-2">No Orders Yet</h3>
+                                <p class="text-gray-600">Join a batch order to see your orders here.</p>
+                            </div>
+                        `}
+                        
+                        <!-- Sample static orders for demo -->
                         <div class="bg-white rounded-xl shadow-sm p-6">
                             <div class="flex items-center justify-between mb-4">
                                 <div class="flex items-center">
@@ -824,6 +865,21 @@ function handleRegistration(event, role) {
 }
 
 function joinBatchOrder(orderId) {
+    // Find the specific batch order
+    const batchOrder = sampleBatchOrders.find(order => order.id === orderId);
+    
+    if (!batchOrder) {
+        showNotification('Batch order not found!', 'error');
+        return;
+    }
+    
+    const remainingQuantity = batchOrder.totalQuantity - batchOrder.currentQuantity;
+    
+    if (remainingQuantity <= 0) {
+        showNotification('This batch order is already full!', 'error');
+        return;
+    }
+    
     // Create modal for joining batch order
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
@@ -831,12 +887,19 @@ function joinBatchOrder(orderId) {
         <div class="bg-white rounded-xl p-6 m-4 max-w-md w-full">
             <h3 class="text-lg font-semibold mb-4">Join Batch Order</h3>
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Quantity (kg)</label>
-                <input type="number" id="order-quantity" class="w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="5" min="1" max="50">
+                <h4 class="font-medium text-gray-800">${batchOrder.productName}</h4>
+                <p class="text-sm text-gray-600">${batchOrder.supplierName}</p>
+                <p class="text-sm text-orange-600">⏰ ${batchOrder.expiresIn} remaining</p>
             </div>
             <div class="mb-4">
-                <p class="text-sm text-gray-600">Price: ₹25/kg</p>
-                <p class="text-sm text-gray-600">Delivery: Tomorrow 7:00 AM</p>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Quantity (kg)</label>
+                <input type="number" id="order-quantity" class="w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="5" min="1" max="${remainingQuantity}" value="5">
+                <p class="text-xs text-gray-500 mt-1">Maximum available: ${remainingQuantity}kg</p>
+            </div>
+            <div class="mb-4">
+                <p class="text-sm text-gray-600">Price: ₹${batchOrder.pricePerKg}/kg</p>
+                <p class="text-sm text-gray-600">Delivery: ${batchOrder.deliveryTime}</p>
+                <p class="text-sm text-gray-600">Current progress: ${batchOrder.currentQuantity}/${batchOrder.totalQuantity}kg (${Math.round((batchOrder.currentQuantity/batchOrder.totalQuantity)*100)}%)</p>
             </div>
             <div class="flex space-x-4">
                 <button onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg">Cancel</button>
@@ -848,8 +911,56 @@ function joinBatchOrder(orderId) {
 }
 
 function confirmJoinOrder(orderId) {
-    const quantity = document.getElementById('order-quantity')?.value || 5;
-    showNotification(`Successfully joined batch order for ${quantity}kg!`);
+    const quantity = parseInt(document.getElementById('order-quantity')?.value || 5);
+    
+    // Find the batch order in sampleBatchOrders
+    const batchOrderIndex = sampleBatchOrders.findIndex(order => order.id === orderId);
+    
+    if (batchOrderIndex !== -1) {
+        const batchOrder = sampleBatchOrders[batchOrderIndex];
+        
+        // Check if there's enough remaining quantity
+        const remainingQuantity = batchOrder.totalQuantity - batchOrder.currentQuantity;
+        
+        if (quantity > remainingQuantity) {
+            showNotification(`Only ${remainingQuantity}kg remaining in this batch order!`, 'error');
+            return;
+        }
+        
+        // Update the batch order
+        sampleBatchOrders[batchOrderIndex].currentQuantity += quantity;
+        sampleBatchOrders[batchOrderIndex].participants += 1;
+        
+        // Add to user's personal orders
+        const userOrder = {
+            id: `user_order_${Date.now()}`,
+            batchOrderId: orderId,
+            productName: batchOrder.productName,
+            productImage: batchOrder.productImage,
+            supplierName: batchOrder.supplierName,
+            quantity: quantity,
+            pricePerKg: batchOrder.pricePerKg,
+            totalAmount: quantity * batchOrder.pricePerKg,
+            deliveryTime: batchOrder.deliveryTime,
+            status: 'confirmed',
+            joinedAt: new Date().toISOString()
+        };
+        
+        AppState.userOrders.push(userOrder);
+        
+        // Check if batch order is now complete
+        if (sampleBatchOrders[batchOrderIndex].currentQuantity >= sampleBatchOrders[batchOrderIndex].totalQuantity) {
+            sampleBatchOrders[batchOrderIndex].status = 'completed';
+            showNotification(`Successfully joined batch order for ${quantity}kg! Order is now complete.`);
+        } else {
+            showNotification(`Successfully joined batch order for ${quantity}kg!`);
+        }
+        
+        // Re-render the current view to show updated numbers
+        render();
+    } else {
+        showNotification('Batch order not found!', 'error');
+    }
 }
 
 function viewSupplier(supplierId) {
