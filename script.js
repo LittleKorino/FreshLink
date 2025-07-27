@@ -403,6 +403,39 @@ function VendorDashboard() {
                     </div>
                 </div>
 
+                <!-- Quick Order Section -->
+                <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold">⚡ Quick Order</h2>
+                        <button onclick="switchView('suppliers')" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                            Browse All →
+                        </button>
+                    </div>
+                    <div class="grid md:grid-cols-4 gap-4">
+                        ${sampleSuppliers.slice(0, 2).map(supplier => 
+                            supplier.products.slice(0, 2).map(product => `
+                                <div class="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow">
+                                    <div class="text-center mb-2">
+                                        <div class="text-2xl mb-1">${product.image}</div>
+                                        <h4 class="font-medium text-sm">${product.name}</h4>
+                                        <p class="text-xs text-gray-600">${supplier.name}</p>
+                                    </div>
+                                    <div class="text-center mb-3">
+                                        <p class="text-lg font-bold text-blue-600">₹${Math.round(product.price * 1.1)}</p>
+                                        <p class="text-xs text-gray-500">per ${product.unit}</p>
+                                    </div>
+                                    <button onclick="placeIndividualOrder('${product.id}', '${supplier.id}')" class="w-full bg-blue-500 text-white py-1.5 rounded text-xs hover:bg-blue-600 transition-colors">
+                                        Order Now
+                                    </button>
+                                </div>
+                            `).join('')
+                        ).flat().join('')}
+                    </div>
+                    <div class="mt-4 text-center">
+                        <p class="text-xs text-gray-500">Individual orders • 10% markup • Same/next day delivery</p>
+                    </div>
+                </div>
+
                 <!-- Active Batch Orders -->
                 <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
                     <div class="flex justify-between items-center mb-6">
@@ -497,29 +530,7 @@ function VendorDashboard() {
                 </div>
             </div>
 
-            <!-- Bottom Navigation -->
-            <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-                <div class="max-w-7xl mx-auto px-4">
-                    <div class="flex justify-around py-3">
-                        <button onclick="switchView('vendor-dashboard')" class="flex flex-col items-center text-green-600">
-                            <span class="text-xl mb-1">🏠</span>
-                            <span class="text-xs">Home</span>
-                        </button>
-                        <button onclick="switchView('suppliers')" class="flex flex-col items-center text-gray-600">
-                            <span class="text-xl mb-1">🏪</span>
-                            <span class="text-xs">Suppliers</span>
-                        </button>
-                        <button onclick="switchView('batch-orders')" class="flex flex-col items-center text-gray-600">
-                            <span class="text-xl mb-1">📦</span>
-                            <span class="text-xs">Batch Orders</span>
-                        </button>
-                        <button onclick="switchView('profile')" class="flex flex-col items-center text-gray-600">
-                            <span class="text-xl mb-1">👤</span>
-                            <span class="text-xs">Profile</span>
-                        </button>
-                    </div>
-                </div>
-            </nav>
+            ${getBottomNavigation()}
         </div>
     `;
 }
@@ -620,29 +631,7 @@ function SuppliersPage() {
                 </div>
             </div>
 
-            <!-- Bottom Navigation -->
-            <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-                <div class="max-w-7xl mx-auto px-4">
-                    <div class="flex justify-around py-3">
-                        <button onclick="switchView('vendor-dashboard')" class="flex flex-col items-center text-gray-600">
-                            <span class="text-xl mb-1">🏠</span>
-                            <span class="text-xs">Home</span>
-                        </button>
-                        <button onclick="switchView('suppliers')" class="flex flex-col items-center text-green-600">
-                            <span class="text-xl mb-1">🏪</span>
-                            <span class="text-xs">Suppliers</span>
-                        </button>
-                        <button onclick="switchView('batch-orders')" class="flex flex-col items-center text-gray-600">
-                            <span class="text-xl mb-1">📦</span>
-                            <span class="text-xs">Batch Orders</span>
-                        </button>
-                        <button onclick="switchView('profile')" class="flex flex-col items-center text-gray-600">
-                            <span class="text-xl mb-1">👤</span>
-                            <span class="text-xs">Profile</span>
-                        </button>
-                    </div>
-                </div>
-            </nav>
+            ${getBottomNavigation()}
         </div>
     `;
 }
@@ -722,20 +711,35 @@ function BatchOrdersPage() {
                                     <div class="flex items-center">
                                         <span class="text-3xl mr-4">${userOrder.productImage}</span>
                                         <div>
-                                            <h3 class="text-lg font-semibold">${userOrder.productName}</h3>
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <h3 class="text-lg font-semibold">${userOrder.productName}</h3>
+                                                <span class="text-xs px-2 py-1 rounded-full ${userOrder.type === 'individual' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}">
+                                                    ${userOrder.type === 'individual' ? 'Individual' : 'Batch'}
+                                                </span>
+                                            </div>
                                             <p class="text-gray-600">${userOrder.supplierName}</p>
-                                            <p class="text-sm text-green-600">✅ ${userOrder.status === 'confirmed' ? 'Confirmed' : userOrder.status} - ${userOrder.quantity}kg ordered</p>
+                                            <p class="text-sm text-green-600">✅ ${userOrder.status === 'confirmed' ? 'Confirmed' : userOrder.status} - ${userOrder.quantity}${userOrder.type === 'individual' ? userOrder.quantity === 1 ? ' unit' : ' units' : 'kg'} ordered</p>
+                                            ${userOrder.type === 'individual' && userOrder.deliveryFee > 0 ? `<p class="text-xs text-orange-600">+ ₹${userOrder.deliveryFee} delivery fee</p>` : ''}
                                         </div>
                                     </div>
                                     <div class="text-right">
                                         <p class="text-lg font-bold text-gray-800">₹${userOrder.totalAmount}</p>
                                         <p class="text-sm text-gray-600">Total paid</p>
+                                        ${userOrder.type === 'individual' ? `<p class="text-xs text-gray-500">₹${userOrder.pricePerUnit}/${userOrder.quantity === 1 ? 'unit' : 'kg'}</p>` : ''}
                                     </div>
                                 </div>
                                 <div class="flex justify-between items-center text-sm">
                                     <span class="text-gray-600">Delivery: ${userOrder.deliveryTime}</span>
-                                    <button class="text-blue-600 hover:text-blue-700">Track Order</button>
+                                    <div class="flex gap-2">
+                                        ${userOrder.type === 'individual' && userOrder.supplierPhone ? `<button onclick="callSupplier('${userOrder.supplierPhone}')" class="text-blue-600 hover:text-blue-700">📞 Call</button>` : ''}
+                                        <button class="text-blue-600 hover:text-blue-700">Track Order</button>
+                                    </div>
                                 </div>
+                                ${userOrder.specialInstructions ? `
+                                <div class="mt-3 pt-3 border-t border-gray-100">
+                                    <p class="text-xs text-gray-600"><span class="font-medium">Special Instructions:</span> ${userOrder.specialInstructions}</p>
+                                </div>
+                                ` : ''}
                             </div>
                         `).join('') : `
                             <div class="bg-white rounded-xl shadow-sm p-6 text-center">
@@ -793,30 +797,264 @@ function BatchOrdersPage() {
                 </div>
             </div>
 
-            <!-- Bottom Navigation -->
-            <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-                <div class="max-w-7xl mx-auto px-4">
-                    <div class="flex justify-around py-3">
-                        <button onclick="switchView('vendor-dashboard')" class="flex flex-col items-center text-gray-600">
-                            <span class="text-xl mb-1">🏠</span>
-                            <span class="text-xs">Home</span>
+            ${getBottomNavigation()}
+        </div>
+    `;
+}
+
+function ProfilePage() {
+    return `
+        <div class="min-h-screen bg-gray-50 pb-20">
+            <!-- Header -->
+            <header class="bg-white shadow-sm sticky top-0 z-10">
+                <div class="max-w-7xl mx-auto px-4 py-4">
+                    <h1 class="text-xl font-semibold">Profile</h1>
+                    <p class="text-sm text-gray-600">Manage your account and settings</p>
+                </div>
+            </header>
+
+            <div class="max-w-7xl mx-auto px-4 py-6">
+                <!-- User Info -->
+                <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                    <div class="flex items-center mb-4">
+                        <div class="w-16 h-16 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center mr-4">
+                            <span class="text-white font-bold text-2xl">${AppState.currentUser?.businessName?.charAt(0) || 'V'}</span>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-semibold">${AppState.currentUser?.businessName || 'My Business'}</h2>
+                            <p class="text-gray-600">${AppState.currentUser?.phone || '+91 98765 43210'}</p>
+                            <p class="text-sm text-green-600">✅ Verified Vendor</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
+                        <div class="text-2xl font-bold text-green-600">${AppState.userOrders.length}</div>
+                        <div class="text-sm text-gray-600">Total Orders</div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
+                        <div class="text-2xl font-bold text-blue-600">₹${AppState.userOrders.reduce((total, order) => total + (order.totalAmount || 0), 0)}</div>
+                        <div class="text-sm text-gray-600">Total Spent</div>
+                    </div>
+                </div>
+
+                <!-- Menu Options -->
+                <div class="space-y-4">
+                    <div class="bg-white rounded-xl shadow-sm">
+                        <button onclick="switchView('order-history')" class="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50">
+                            <div class="flex items-center">
+                                <span class="text-xl mr-3">📋</span>
+                                <span class="font-medium">Order History</span>
+                            </div>
+                            <span class="text-gray-400">→</span>
                         </button>
-                        <button onclick="switchView('suppliers')" class="flex flex-col items-center text-gray-600">
-                            <span class="text-xl mb-1">🏪</span>
-                            <span class="text-xs">Suppliers</span>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm">
+                        <button class="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50">
+                            <div class="flex items-center">
+                                <span class="text-xl mr-3">💳</span>
+                                <span class="font-medium">Payment Methods</span>
+                            </div>
+                            <span class="text-gray-400">→</span>
                         </button>
-                        <button onclick="switchView('batch-orders')" class="flex flex-col items-center text-green-600">
-                            <span class="text-xl mb-1">📦</span>
-                            <span class="text-xs">Batch Orders</span>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm">
+                        <button class="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50">
+                            <div class="flex items-center">
+                                <span class="text-xl mr-3">📍</span>
+                                <span class="font-medium">Delivery Addresses</span>
+                            </div>
+                            <span class="text-gray-400">→</span>
                         </button>
-                        <button onclick="switchView('profile')" class="flex flex-col items-center text-gray-600">
-                            <span class="text-xl mb-1">👤</span>
-                            <span class="text-xs">Profile</span>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm">
+                        <button class="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50">
+                            <div class="flex items-center">
+                                <span class="text-xl mr-3">🔔</span>
+                                <span class="font-medium">Notifications</span>
+                            </div>
+                            <span class="text-gray-400">→</span>
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm">
+                        <button class="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50">
+                            <div class="flex items-center">
+                                <span class="text-xl mr-3">❓</span>
+                                <span class="font-medium">Help & Support</span>
+                            </div>
+                            <span class="text-gray-400">→</span>
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm">
+                        <button onclick="logout()" class="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50 text-red-600">
+                            <div class="flex items-center">
+                                <span class="text-xl mr-3">🚪</span>
+                                <span class="font-medium">Logout</span>
+                            </div>
+                            <span class="text-gray-400">→</span>
                         </button>
                     </div>
                 </div>
-            </nav>
+            </div>
+
+            ${getBottomNavigation()}
         </div>
+    `;
+}
+
+function OrderHistoryPage() {
+    // Separate individual and batch orders
+    const individualOrders = AppState.userOrders.filter(order => order.type === 'individual');
+    const batchOrders = AppState.userOrders.filter(order => order.type === 'batch');
+    
+    return `
+        <div class="min-h-screen bg-gray-50 pb-20">
+            <!-- Header -->
+            <header class="bg-white shadow-sm sticky top-0 z-10">
+                <div class="max-w-7xl mx-auto px-4 py-4">
+                    <div class="flex items-center">
+                        <button onclick="switchView('profile')" class="mr-4 p-2 hover:bg-gray-100 rounded-lg">
+                            <span class="text-xl">←</span>
+                        </button>
+                        <div>
+                            <h1 class="text-xl font-semibold">Order History</h1>
+                            <p class="text-sm text-gray-600">Your complete order timeline</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="max-w-7xl mx-auto px-4 py-6">
+                <!-- Order Summary Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
+                        <div class="text-2xl font-bold text-blue-600">${individualOrders.length}</div>
+                        <div class="text-sm text-gray-600">Individual Orders</div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
+                        <div class="text-2xl font-bold text-green-600">${batchOrders.length}</div>
+                        <div class="text-sm text-gray-600">Batch Orders</div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
+                        <div class="text-2xl font-bold text-purple-600">${AppState.userOrders.length}</div>
+                        <div class="text-sm text-gray-600">Total Orders</div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-4 text-center">
+                        <div class="text-2xl font-bold text-orange-600">₹${AppState.userOrders.reduce((total, order) => total + (order.totalAmount || 0), 0)}</div>
+                        <div class="text-sm text-gray-600">Total Spent</div>
+                    </div>
+                </div>
+
+                <!-- Order Filters -->
+                <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+                    <div class="flex gap-4">
+                        <button onclick="filterOrders('all')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm" id="filter-all">All Orders</button>
+                        <button onclick="filterOrders('individual')" class="px-4 py-2 text-gray-700 rounded-lg text-sm hover:bg-gray-100" id="filter-individual">Individual</button>
+                        <button onclick="filterOrders('batch')" class="px-4 py-2 text-gray-700 rounded-lg text-sm hover:bg-gray-100" id="filter-batch">Batch Orders</button>
+                    </div>
+                </div>
+
+                <!-- Orders List -->
+                <div class="space-y-4" id="orders-container">
+                    ${AppState.userOrders.length > 0 ? AppState.userOrders
+                        .sort((a, b) => new Date(b.orderDate || b.joinedAt) - new Date(a.orderDate || a.joinedAt))
+                        .map(userOrder => `
+                        <div class="bg-white rounded-xl shadow-sm p-6 order-item" data-type="${userOrder.type}">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center">
+                                    <span class="text-3xl mr-4">${userOrder.productImage}</span>
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <h3 class="text-lg font-semibold">${userOrder.productName}</h3>
+                                            <span class="text-xs px-2 py-1 rounded-full ${userOrder.type === 'individual' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}">
+                                                ${userOrder.type === 'individual' ? 'Individual' : 'Batch'}
+                                            </span>
+                                        </div>
+                                        <p class="text-gray-600">${userOrder.supplierName}</p>
+                                        <p class="text-sm text-gray-500">Order ID: ${userOrder.id}</p>
+                                        <p class="text-sm text-green-600">✅ ${userOrder.status === 'confirmed' ? 'Confirmed' : userOrder.status} - ${userOrder.quantity}${userOrder.type === 'individual' ? userOrder.quantity === 1 ? ' unit' : ' units' : 'kg'} ordered</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-lg font-bold text-gray-800">₹${userOrder.totalAmount}</p>
+                                    <p class="text-sm text-gray-600">Total paid</p>
+                                    ${userOrder.type === 'individual' ? `
+                                        <div class="text-xs text-gray-500 mt-1">
+                                            <p>Subtotal: ₹${userOrder.subtotal}</p>
+                                            ${userOrder.deliveryFee > 0 ? `<p>Delivery: ₹${userOrder.deliveryFee}</p>` : '<p>Free delivery</p>'}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-gray-600">
+                                    Ordered: ${new Date(userOrder.orderDate || userOrder.joinedAt).toLocaleDateString('en-IN', { 
+                                        year: 'numeric', 
+                                        month: 'short', 
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}
+                                </span>
+                                <span class="text-gray-600">Delivery: ${userOrder.deliveryTime}</span>
+                            </div>
+                            ${userOrder.specialInstructions ? `
+                            <div class="mt-3 pt-3 border-t border-gray-100">
+                                <p class="text-xs text-gray-600"><span class="font-medium">Special Instructions:</span> ${userOrder.specialInstructions}</p>
+                            </div>
+                            ` : ''}
+                        </div>
+                    `).join('') : `
+                        <div class="bg-white rounded-xl shadow-sm p-8 text-center">
+                            <div class="text-4xl mb-4">📦</div>
+                            <h3 class="text-lg font-semibold mb-2">No Orders Yet</h3>
+                            <p class="text-gray-600 mb-4">Start ordering to see your history here.</p>
+                            <button onclick="switchView('suppliers')" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                                Browse Suppliers
+                            </button>
+                        </div>
+                    `}
+                </div>
+            </div>
+
+            ${getBottomNavigation()}
+        </div>
+    `;
+}
+
+// Helper function for bottom navigation
+function getBottomNavigation() {
+    return `
+        <!-- Bottom Navigation -->
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex justify-around py-3">
+                    <button onclick="switchView('vendor-dashboard')" class="flex flex-col items-center ${AppState.currentView === 'vendor-dashboard' ? 'text-green-600' : 'text-gray-600'}">
+                        <span class="text-xl mb-1">🏠</span>
+                        <span class="text-xs">Home</span>
+                    </button>
+                    <button onclick="switchView('suppliers')" class="flex flex-col items-center ${AppState.currentView === 'suppliers' ? 'text-green-600' : 'text-gray-600'}">
+                        <span class="text-xl mb-1">🏪</span>
+                        <span class="text-xs">Suppliers</span>
+                    </button>
+                    <button onclick="switchView('batch-orders')" class="flex flex-col items-center ${AppState.currentView === 'batch-orders' ? 'text-green-600' : 'text-gray-600'}">
+                        <span class="text-xl mb-1">📦</span>
+                        <span class="text-xs">Batch Orders</span>
+                    </button>
+                    <button onclick="switchView('profile')" class="flex flex-col items-center ${AppState.currentView === 'profile' ? 'text-green-600' : 'text-gray-600'}">
+                        <span class="text-xl mb-1">👤</span>
+                        <span class="text-xs">Profile</span>
+                    </button>
+                </div>
+            </div>
+        </nav>
     `;
 }
 
@@ -934,6 +1172,7 @@ function confirmJoinOrder(orderId) {
         // Add to user's personal orders
         const userOrder = {
             id: `user_order_${Date.now()}`,
+            type: 'batch',
             batchOrderId: orderId,
             productName: batchOrder.productName,
             productImage: batchOrder.productImage,
@@ -1028,9 +1267,14 @@ function viewSupplier(supplierId) {
                                     <p class="text-sm text-gray-600">per ${product.unit}</p>
                                     <p class="text-xs text-gray-500 mt-1">${product.available} ${product.unit} available</p>
                                 </div>
-                                <button onclick="startBatchOrder('${product.id}')" class="w-full mt-3 bg-green-500 text-white py-2 rounded-lg text-sm hover:bg-green-600 transition-colors">
-                                    Start Batch Order
-                                </button>
+                                <div class="mt-3 space-y-2">
+                                    <button onclick="placeIndividualOrder('${product.id}', '${supplier.id}')" class="w-full bg-blue-500 text-white py-2 rounded-lg text-sm hover:bg-blue-600 transition-colors">
+                                        Order Now
+                                    </button>
+                                    <button onclick="startBatchOrder('${product.id}')" class="w-full bg-green-500 text-white py-2 rounded-lg text-sm hover:bg-green-600 transition-colors">
+                                        Start Batch Order
+                                    </button>
+                                </div>
                             </div>
                         `).join('')}
                     </div>
@@ -1043,6 +1287,124 @@ function viewSupplier(supplierId) {
 
 function callSupplier(phone) {
     showNotification(`Calling ${phone}...`);
+}
+
+function placeIndividualOrder(productId, supplierId) {
+    // Find the product and supplier
+    const supplier = sampleSuppliers.find(s => s.id === supplierId);
+    const product = supplier?.products.find(p => p.id === productId);
+    
+    if (!supplier || !product) {
+        showNotification('Product or supplier not found!', 'error');
+        return;
+    }
+
+    // Create individual order modal
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.innerHTML = `
+        <div class="bg-white rounded-xl p-6 m-4 max-w-md w-full">
+            <h3 class="text-lg font-semibold mb-4">Place Individual Order</h3>
+            <div class="mb-4">
+                <div class="flex items-center mb-3">
+                    <span class="text-3xl mr-3">${product.image}</span>
+                    <div>
+                        <h4 class="font-semibold">${product.name}</h4>
+                        <p class="text-sm text-gray-600">${supplier.name}</p>
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg mb-3">
+                    <p class="text-sm text-gray-600">Individual Price (No Bulk Discount)</p>
+                    <p class="text-xl font-bold text-blue-600">₹${Math.round(product.price * 1.1)}/kg</p>
+                    <p class="text-xs text-gray-500">Regular price: ₹${product.price}/kg</p>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Quantity (${product.unit})</label>
+                <input type="number" id="individual-quantity" class="w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="1" min="1" max="${product.available}" value="1">
+                <p class="text-xs text-gray-500 mt-1">Available: ${product.available}${product.unit}</p>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Delivery Time</label>
+                <select id="delivery-time" class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+                    <option value="today">Today (6:00 PM) - ₹20 delivery fee</option>
+                    <option value="tomorrow">Tomorrow (8:00 AM) - Free delivery</option>
+                    <option value="custom">Schedule for later - Free delivery</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Special Instructions (Optional)</label>
+                <textarea id="special-instructions" class="w-full px-4 py-3 border border-gray-300 rounded-lg" rows="2" placeholder="Any specific requirements..."></textarea>
+            </div>
+            <div class="flex space-x-4">
+                <button onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg">Cancel</button>
+                <button onclick="confirmIndividualOrder('${productId}', '${supplierId}'); this.closest('.fixed').remove()" class="flex-1 bg-blue-500 text-white py-2 rounded-lg">Place Order</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function confirmIndividualOrder(productId, supplierId) {
+    const quantity = parseInt(document.getElementById('individual-quantity')?.value || 1);
+    const deliveryTime = document.getElementById('delivery-time')?.value || 'tomorrow';
+    const specialInstructions = document.getElementById('special-instructions')?.value || '';
+    
+    // Find the product and supplier
+    const supplier = sampleSuppliers.find(s => s.id === supplierId);
+    const product = supplier?.products.find(p => p.id === productId);
+    
+    if (!supplier || !product) {
+        showNotification('Product or supplier not found!', 'error');
+        return;
+    }
+    
+    // Check quantity availability
+    if (quantity > product.available) {
+        showNotification(`Only ${product.available}${product.unit} available!`, 'error');
+        return;
+    }
+    
+    // Calculate pricing
+    const individualPrice = Math.round(product.price * 1.1); // 10% markup for individual orders
+    const deliveryFee = deliveryTime === 'today' ? 20 : 0;
+    const subtotal = quantity * individualPrice;
+    const total = subtotal + deliveryFee;
+    
+    // Create individual order
+    const individualOrder = {
+        id: `individual_order_${Date.now()}`,
+        type: 'individual',
+        productId: productId,
+        productName: product.name,
+        productImage: product.image,
+        supplierId: supplierId,
+        supplierName: supplier.name,
+        supplierPhone: supplier.phone,
+        quantity: quantity,
+        pricePerUnit: individualPrice,
+        subtotal: subtotal,
+        deliveryFee: deliveryFee,
+        totalAmount: total,
+        deliveryTime: deliveryTime === 'today' ? 'Today 6:00 PM' : 
+                     deliveryTime === 'tomorrow' ? 'Tomorrow 8:00 AM' : 'Scheduled',
+        specialInstructions: specialInstructions,
+        status: 'confirmed',
+        orderDate: new Date().toISOString()
+    };
+    
+    // Add to user orders
+    AppState.userOrders.push(individualOrder);
+    
+    // Update product availability (in real app, this would be handled by backend)
+    const supplierIndex = sampleSuppliers.findIndex(s => s.id === supplierId);
+    const productIndex = sampleSuppliers[supplierIndex].products.findIndex(p => p.id === productId);
+    sampleSuppliers[supplierIndex].products[productIndex].available -= quantity;
+    
+    showNotification(`Individual order placed successfully! Total: ₹${total} (including delivery)`);
+    
+    // Re-render to update the view
+    render();
 }
 
 function startBatchOrder(productId) {
@@ -1087,6 +1449,24 @@ function submitRating() {
     showNotification('Thank you for your feedback!');
 }
 
+function filterOrders(type) {
+    // Update filter button styles
+    document.querySelectorAll('[id^="filter-"]').forEach(btn => {
+        btn.className = 'px-4 py-2 text-gray-700 rounded-lg text-sm hover:bg-gray-100';
+    });
+    document.getElementById(`filter-${type}`).className = 'px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm';
+    
+    // Show/hide orders based on filter
+    document.querySelectorAll('.order-item').forEach(item => {
+        const orderType = item.getAttribute('data-type');
+        if (type === 'all' || orderType === type) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
 function logout() {
     AppState.currentUser = null;
     AppState.currentView = 'landing';
@@ -1116,6 +1496,12 @@ function render() {
             break;
         case 'batch-orders':
             app.innerHTML = BatchOrdersPage();
+            break;
+        case 'profile':
+            app.innerHTML = ProfilePage();
+            break;
+        case 'order-history':
+            app.innerHTML = OrderHistoryPage();
             break;
         default:
             app.innerHTML = LandingPage();
